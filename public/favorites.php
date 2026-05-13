@@ -50,9 +50,9 @@ try {
         <div class="container">
             <div class="brand-row">
                 <div>
-                    <p class="eyebrow">CIS 435 Project 4</p>
+                    <p class="eyebrow">Your saved recipes</p>
                     <h1>Your Favorite Recipes</h1>
-                    <p class="hero-copy">These recipes are saved in the PantryPal MySQL database so you can come back to them later.</p>
+                    <p class="hero-copy">Recipes you've saved for later. Add notes, revisit directions, or remove ones you no longer need.</p>
                 </div>
                 <nav class="nav-links">
                     <a href="index.php">Search</a>

@@ -60,7 +60,7 @@ if (!$recipeId) {
         <div class="container">
             <div class="brand-row">
                 <div>
-                    <p class="eyebrow">CIS 435 Project 4</p>
+                    <p class="eyebrow">Recipe Details</p>
                     <h1><?= e($recipe['title'] ?? 'Recipe Details'); ?></h1>
                     <p class="hero-copy">Take a look at the ingredients and step-by-step directions for this recipe.</p>
                 </div>
