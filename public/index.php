@@ -81,7 +81,7 @@ try {
         <div class="container">
             <div class="brand-row">
                 <div>
-                    <p class="eyebrow">CIS 435 Project 4</p>
+                    <p class="eyebrow">Try this instead of going out to eat</p>
                     <h1>PantryPal</h1>
                     <p class="hero-copy">Type in the ingredients you already have, and PantryPal will help you find recipes you can make tonight.</p>
                 </div>
