@@ -1,7 +1,7 @@
 /*
  * Author:
  * Created on: 4/12/2026
- * Last updated: 4/14/2026
+ * Last updated: 4/18/2026
  * Purpose: Style the PantryPal layout, cards, forms, and theme.
  */
 
@@ -59,7 +59,7 @@ a {
 }
 
 /* ============================================= */
-/* HEADER + NAV                                  */
+/* HEADER and NAVIGATION!!!                                 */
 /* ============================================= */
 .site-header {
     padding: 2rem 0 1rem;
@@ -128,7 +128,7 @@ h1 {
 }
 
 /* ============================================= */
-/* PANELS + FORMS                                */
+/* PANELS and FORMS                                */
 /* ============================================= */
 .panel,
 .recipe-card,

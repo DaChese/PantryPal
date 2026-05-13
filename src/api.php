@@ -2,7 +2,7 @@
 /*
  * Author: Aldo Medina
  * Created on: 4/12/2026
- * Last updated: 4/15/2026
+ * Last updated: 4/18/2026
  * Purpose: Handle Spoonacular API calls for recipe search and details.
  */
 
@@ -78,7 +78,7 @@ function spoonacular_get(string $endpoint, array $params = []): array
 
     $decoded = json_decode($response, true);
 
-    // Spoonacular returningan HTTP error, so pass along the message if possible ///
+    // Spoonacular if it returns an HTTP error, so pass along the message if possible ///
     if ($statusCode >= 400) {
         $message = $decoded['message'] ?? 'Recipe service returned an error.';
 

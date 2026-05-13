@@ -1,7 +1,7 @@
 /* =========================================
  * Author: Aldo Medina
  * Created on: 4/12/2026
- * Last updated: 4/15/2026
+ * Last updated: 4/18/2026
  * Purpose: Create the PantryPal database tables
  * ========================================= */
 /* =========================================

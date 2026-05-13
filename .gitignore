@@ -1,3 +1,5 @@
 src/config.php
+!src/config.example.php
 server-out.log
 server-err.log
+*.zip

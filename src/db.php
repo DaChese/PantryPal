@@ -2,7 +2,7 @@
 /*
  * Author: Aldo Medina
  * Created on: 4/12/2026
- * Last updated: 4/15/2026
+ * Last updated: 4/18/2026
  * Purpose: Create the shared PDO connection for the app.
  */
 
@@ -20,7 +20,8 @@ function get_pdo(): PDO
         return $pdo;
     }
 
-    $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4';
+    $port = getenv('MYSQLPORT') ?: '3306';
+    $dsn = 'mysql:host=' . DB_HOST . ';port=' . $port . ';dbname=' . DB_NAME . ';charset=utf8mb4';
 
     $options = [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -28,7 +29,7 @@ function get_pdo(): PDO
         PDO::ATTR_EMULATE_PREPARES => false,
     ];
 
-    // Use utf8mb4 so recipe titles and notes store cleanly ///
+    // this is for storing recipe titles and notes cleanly ///
     try {
         $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
     } catch (PDOException $exception) {
