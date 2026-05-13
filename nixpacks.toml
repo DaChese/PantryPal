@@ -9,4 +9,5 @@ cmds = []
 
 [start]
 # Router script lets the built-in server serve static files (css, js) correctly
-cmd = "php -S 0.0.0.0:$PORT -t public public/router.php"
+# The router path must be relative to the document root (-t public)
+cmd = "php -S 0.0.0.0:$PORT -t public router.php"
