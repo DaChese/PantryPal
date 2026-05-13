@@ -1,0 +1,11 @@
+:{$PORT}
+
+root * /app/public
+
+encode gzip
+
+php_fastcgi unix//var/run/php/php-fpm.sock
+
+file_server
+
+try_files {path} {path}/ /index.php?{query}
