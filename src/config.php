@@ -21,7 +21,8 @@ define('DB_PASS', getenv('MYSQL_ROOT_PASSWORD')  ?: getenv('MYSQLPASSWORD')  ?: 
 // =============================================
 // API SETTINGS
 // =============================================
-define('SPOONACULAR_API_KEY', getenv('SPOONACULAR_API_KEY') ?: 'YOUR_SPOONACULAR_API_KEY_HERE');
+define('SPOONACULAR_API_KEY', getenv('SPOONACULAR_API_KEY') ?: '021a4fa9472a463f981e02bdf140d818
+');
 define('SPOONACULAR_BASE_URL', 'https://api.spoonacular.com/recipes');
 
 // =============================================
