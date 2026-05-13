@@ -8,5 +8,5 @@ nixPkgs = ["php83", "php83Extensions.pdo", "php83Extensions.pdo_mysql", "php83Ex
 cmds = []
 
 [start]
-# Serve the public/ directory on the PORT Railway assigns
-cmd = "php -S 0.0.0.0:$PORT -t public"
+# Router script lets the built-in server serve static files (css, js) correctly
+cmd = "php -S 0.0.0.0:$PORT -t public public/router.php"
