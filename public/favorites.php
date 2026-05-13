@@ -8,12 +8,15 @@
 
 require_once dirname(__DIR__) . '/src/db.php';
 require_once dirname(__DIR__) . '/src/helpers.php';
+require_once dirname(__DIR__) . '/src/auth.php';
 
 ensure_session_started();
+$user = require_login();
 
 $flash = get_flash_message();
 $savedRecipes = [];
 $errorMessage = '';
+$tier = $user['tier'] ?? 'free';
 
 // Show setup warnings here too so hosting/config issues are easier to spot //
 $environmentWarnings = get_environment_warnings();
@@ -22,9 +25,10 @@ try {
     $pdo = get_pdo();
 
     // =============================================
-    // LOAD SAVED RECIPES
+    // LOAD SAVED RECIPES (user-specific)
     // =============================================
-    $stmt = $pdo->query('SELECT * FROM saved_recipes ORDER BY created_at DESC');
+    $stmt = $pdo->prepare('SELECT * FROM saved_recipes WHERE user_id = :uid ORDER BY created_at DESC');
+    $stmt->execute([':uid' => $user['id']]);
     $savedRecipes = $stmt->fetchAll();
 } catch (RuntimeException $exception) {
     $errorMessage = $exception->getMessage();
@@ -53,6 +57,11 @@ try {
                 <nav class="nav-links">
                     <a href="index.php">Search</a>
                     <a href="favorites.php" class="active">Favorites</a>
+                    <a href="pricing.php">
+                        <span class="tier-badge tier-badge--<?= e($tier); ?>"><?= e(ucfirst($tier)); ?></span>
+                        Plans
+                    </a>
+                    <a href="logout.php">Log Out</a>
                 </nav>
             </div>
         </div>

@@ -10,8 +10,10 @@ require_once dirname(__DIR__) . '/src/db.php';
 require_once dirname(__DIR__) . '/src/api.php';
 require_once dirname(__DIR__) . '/src/validation.php';
 require_once dirname(__DIR__) . '/src/helpers.php';
+require_once dirname(__DIR__) . '/src/auth.php';
 
 ensure_session_started();
+$user = require_login();
 
 // Only allow recipe saves through the POST form ///
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -31,11 +33,12 @@ try {
     $pdo = get_pdo();
 
     // =============================================
-    // DUPLICATE CHECK
+    // DUPLICATE CHECK (per user)
     // =============================================
-    $checkStmt = $pdo->prepare('SELECT id FROM saved_recipes WHERE recipe_api_id = :recipe_api_id LIMIT 1');
+    $checkStmt = $pdo->prepare('SELECT id FROM saved_recipes WHERE recipe_api_id = :recipe_api_id AND user_id = :uid LIMIT 1');
     $checkStmt->execute([
         ':recipe_api_id' => $validation['recipe_api_id'],
+        ':uid'           => $user['id'],
     ]);
 
     if ($checkStmt->fetch()) {
@@ -63,7 +66,8 @@ try {
             used_ingredients,
             missed_ingredients,
             notes,
-            source_url
+            source_url,
+            user_id
         ) VALUES (
             :recipe_api_id,
             :title,
@@ -71,18 +75,20 @@ try {
             :used_ingredients,
             :missed_ingredients,
             :notes,
-            :source_url
+            :source_url,
+            :user_id
         )'
     );
 
     $insertStmt->execute([
-        ':recipe_api_id' => $validation['recipe_api_id'],
-        ':title' => $validation['title'],
-        ':image_url' => $validation['image_url'],
-        ':used_ingredients' => $validation['used_ingredients'],
-        ':missed_ingredients' => $validation['missed_ingredients'],
-        ':notes' => '',
-        ':source_url' => $sourceUrl,
+        ':recipe_api_id'     => $validation['recipe_api_id'],
+        ':title'             => $validation['title'],
+        ':image_url'         => $validation['image_url'],
+        ':used_ingredients'  => $validation['used_ingredients'],
+        ':missed_ingredients'=> $validation['missed_ingredients'],
+        ':notes'             => '',
+        ':source_url'        => $sourceUrl,
+        ':user_id'           => $user['id'],
     ]);
 
     set_flash_message('success', 'Recipe saved to favorites.');
