@@ -6,7 +6,6 @@
 
 /* =========================================
  * users table
- * stores accounts, tier, and daily search tracking
  * ========================================= */
 CREATE TABLE IF NOT EXISTS users (
     id            INT AUTO_INCREMENT PRIMARY KEY,
@@ -21,17 +20,37 @@ CREATE TABLE IF NOT EXISTS users (
 
 /* =========================================
  * add user_id to saved_recipes
- * NULL = saved before auth was added (legacy rows)
+ * Skip if the column already exists
  * ========================================= */
-ALTER TABLE saved_recipes
-    ADD COLUMN IF NOT EXISTS user_id INT NULL DEFAULT NULL,
-    ADD CONSTRAINT fk_saved_user
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+SET @col_exists = (
+    SELECT COUNT(*) FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME   = 'saved_recipes'
+      AND COLUMN_NAME  = 'user_id'
+);
+
+SET @sql = IF(@col_exists = 0,
+    'ALTER TABLE saved_recipes ADD COLUMN user_id INT NULL DEFAULT NULL',
+    'SELECT 1'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 /* =========================================
  * add user_id to search_history
  * ========================================= */
-ALTER TABLE search_history
-    ADD COLUMN IF NOT EXISTS user_id INT NULL DEFAULT NULL,
-    ADD CONSTRAINT fk_history_user
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+SET @col_exists2 = (
+    SELECT COUNT(*) FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME   = 'search_history'
+      AND COLUMN_NAME  = 'user_id'
+);
+
+SET @sql2 = IF(@col_exists2 = 0,
+    'ALTER TABLE search_history ADD COLUMN user_id INT NULL DEFAULT NULL',
+    'SELECT 1'
+);
+PREPARE stmt2 FROM @sql2;
+EXECUTE stmt2;
+DEALLOCATE PREPARE stmt2;
