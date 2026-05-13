@@ -7,19 +7,16 @@
  *
  * All sensitive values are read from environment variables so this file
  * is safe to deploy on Railway (or any host) without hardcoding secrets.
- * Set the following env vars in your Railway service:
- *   DB_HOST, DB_NAME, DB_USER, DB_PASS, SPOONACULAR_API_KEY
  */
 
 // =============================================
 // DATABASE SETTINGS
 // =============================================
-// Railway MySQL plugin injects MYSQLHOST, MYSQLDATABASE, MYSQLUSER, MYSQLPASSWORD.
-// Fall back to the generic DB_* names for local dev or other hosts.
-define('DB_HOST', getenv('MYSQLHOST')     ?: getenv('DB_HOST') ?: 'localhost');
-define('DB_NAME', getenv('MYSQLDATABASE') ?: getenv('DB_NAME') ?: '');
-define('DB_USER', getenv('MYSQLUSER')     ?: getenv('DB_USER') ?: '');
-define('DB_PASS', getenv('MYSQLPASSWORD') ?: getenv('DB_PASS') ?: '');
+// Railway injects: MYSQLHOST, MYSQL_DATABASE, MYSQLUSER, MYSQL_ROOT_PASSWORD, MYSQLPORT
+define('DB_HOST', getenv('MYSQLHOST')            ?: getenv('MYSQL_HOST')     ?: getenv('DB_HOST') ?: 'localhost');
+define('DB_NAME', getenv('MYSQL_DATABASE')       ?: getenv('MYSQLDATABASE')  ?: getenv('DB_NAME') ?: '');
+define('DB_USER', getenv('MYSQLUSER')            ?: getenv('MYSQL_USER')     ?: getenv('DB_USER') ?: '');
+define('DB_PASS', getenv('MYSQL_ROOT_PASSWORD')  ?: getenv('MYSQLPASSWORD')  ?: getenv('DB_PASS') ?: '');
 
 // =============================================
 // API SETTINGS
