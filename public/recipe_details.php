@@ -15,6 +15,7 @@ $recipeId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 $recipe = null;
 $ingredients = [];
 $steps = [];
+$calories = null;
 $errorMessage = '';
 $environmentWarnings = get_environment_warnings();
 
@@ -42,6 +43,15 @@ if (!$recipeId) {
                 if (!empty($step['step'])) {
                     $steps[] = $step['step'];
                 }
+            }
+        }
+
+        // Pull calories from nutrition data if available
+        $calories = null;
+        foreach ($recipe['nutrition']['nutrients'] ?? [] as $nutrient) {
+            if (strtolower($nutrient['name']) === 'calories') {
+                $calories = round($nutrient['amount']);
+                break;
             }
         }
     }
@@ -96,6 +106,9 @@ if (!$recipeId) {
                     <?php endif; ?>
                     <?php if (!empty($recipe['servings'])): ?>
                         <span>Servings: <?= (int) $recipe['servings']; ?></span>
+                    <?php endif; ?>
+                    <?php if ($calories !== null): ?>
+                        <span>Calories: <?= $calories; ?> kcal per serving</span>
                     <?php endif; ?>
                 </div>
 

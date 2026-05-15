@@ -124,8 +124,7 @@ function search_recipes_by_ingredients(string $ingredientQuery): array
 // =============================================
 function fetch_recipe_information(int $recipeId): array
 {
-    // Used later when saving a favorite so we can store a real source link ///
     return spoonacular_get('/' . $recipeId . '/information', [
-        'includeNutrition' => 'false',
+        'includeNutrition' => 'true',
     ]);
 }
