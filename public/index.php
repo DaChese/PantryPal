@@ -18,6 +18,8 @@ $flash               = get_flash_message();
 $recipes             = [];
 $errorMessage        = '';
 $searchQuery         = '';
+$calorieTarget       = '';
+$searchMode          = 'ingredients'; // 'ingredients' or 'calories'
 $recentSearches      = [];
 $environmentWarnings = get_environment_warnings();
 $savings             = [];
@@ -48,41 +50,61 @@ try {
         if (!$quota['allowed']) {
             $errorMessage = $quota['error'];
         } else {
-            $validation = validate_ingredient_input($_POST['ingredients'] ?? '');
+            $rawCalories   = trim($_POST['calorie_target'] ?? '');
+            $calorieTarget = ($rawCalories !== '') ? filter_var($rawCalories, FILTER_VALIDATE_INT) : null;
+            $resultLimit   = get_result_limit_for_tier($tier);
 
-            if (!$validation['valid']) {
-                $errorMessage = $validation['error'];
-                $searchQuery  = trim((string) ($_POST['ingredients'] ?? ''));
-            } else {
-                $searchQuery = $validation['query'];
-
-                $historyStmt = $pdo->prepare(
-                    'INSERT INTO search_history (ingredients_query, user_id) VALUES (:q, :uid)'
-                );
-                $historyStmt->execute([
-                    ':q'   => $validation['query'],
-                    ':uid' => $user['id'],
-                ]);
-
-                // Apply tier result limit
-                $resultLimit = get_result_limit_for_tier($tier);
-                $apiResponse = spoonacular_get('/findByIngredients', [
-                    'ingredients'  => $validation['api_query'],
-                    'number'       => $resultLimit,
-                    'ranking'      => 1,
-                    'ignorePantry' => 'true',
-                ]);
-
-                if (!$apiResponse['success']) {
-                    $errorMessage = $apiResponse['error'];
+            if ($calorieTarget !== null && $calorieTarget !== false && $calorieTarget > 0) {
+                // ---- CALORIE-BASED SEARCH ----
+                if ($calorieTarget < 50 || $calorieTarget > 5000) {
+                    $errorMessage  = 'Please enter a calorie target between 50 and 5000.';
+                    $calorieTarget = $rawCalories;
                 } else {
-                    $recipes = $apiResponse['data'];
+                    $searchMode    = 'calories';
+                    $calorieTarget = (int) $calorieTarget;
 
-                    if (empty($recipes)) {
-                        $errorMessage = 'No recipes matched those ingredients. Try adding one or two more.';
+                    $historyStmt = $pdo->prepare(
+                        'INSERT INTO search_history (ingredients_query, user_id) VALUES (:q, :uid)'
+                    );
+                    $historyStmt->execute([':q' => "~{$calorieTarget} kcal", ':uid' => $user['id']]);
+
+                    $apiResponse = search_recipes_by_calories($calorieTarget, $resultLimit);
+
+                    if (!$apiResponse['success']) {
+                        $errorMessage = $apiResponse['error'];
                     } else {
-                        // Calculate savings if on Pro or Chef tier
-                        if (in_array($tier, ['pro', 'chef'], true)) {
+                        $recipes = $apiResponse['data'];
+                        if (empty($recipes)) {
+                            $errorMessage = "No recipes found near {$calorieTarget} kcal. Try a different target.";
+                        } elseif (in_array($tier, ['pro', 'chef'], true)) {
+                            $savings = calculate_savings($recipes);
+                        }
+                    }
+                }
+            } else {
+                // ---- INGREDIENT-BASED SEARCH ----
+                $validation = validate_ingredient_input($_POST['ingredients'] ?? '');
+
+                if (!$validation['valid']) {
+                    $errorMessage = $validation['error'];
+                    $searchQuery  = trim((string) ($_POST['ingredients'] ?? ''));
+                } else {
+                    $searchQuery = $validation['query'];
+
+                    $historyStmt = $pdo->prepare(
+                        'INSERT INTO search_history (ingredients_query, user_id) VALUES (:q, :uid)'
+                    );
+                    $historyStmt->execute([':q' => $validation['query'], ':uid' => $user['id']]);
+
+                    $apiResponse = search_recipes_by_ingredients($validation['api_query'], $resultLimit);
+
+                    if (!$apiResponse['success']) {
+                        $errorMessage = $apiResponse['error'];
+                    } else {
+                        $recipes = $apiResponse['data'];
+                        if (empty($recipes)) {
+                            $errorMessage = 'No recipes matched those ingredients. Try adding one or two more.';
+                        } elseif (in_array($tier, ['pro', 'chef'], true)) {
                             $savings = calculate_savings($recipes);
                         }
                     }
@@ -206,6 +228,17 @@ try {
                         <small id="ingredient-help">Use commas to separate ingredients. Max 500 characters.</small>
                         <small id="ingredient-count"><?= strlen($searchQuery); ?>/500</small>
                     </div>
+                    <div class="calorie-row">
+                        <label for="calorie_target">Calorie target <span class="optional-label">(optional)</span></label>
+                        <div class="calorie-input-wrap">
+                            <input type="number" id="calorie_target" name="calorie_target"
+                                   min="50" max="5000" step="50"
+                                   placeholder="e.g. 500"
+                                   value="<?= e((string) ($calorieTarget ?? '')); ?>">
+                            <span class="calorie-unit">kcal per serving</span>
+                        </div>
+                        <small>Leave blank to search by ingredients only. Enter a number to find recipes near that calorie count.</small>
+                    </div>
                     <button type="submit">Find Recipes</button>
                 </form>
             <?php else: ?>
@@ -270,7 +303,11 @@ try {
                 <div class="section-heading">
                     <h2>Recipe Results</h2>
                     <?php if (!empty($recipes)): ?>
-                        <p><?= count($recipes); ?> recipes found for "<?= e($searchQuery); ?>"</p>
+                        <?php if ($searchMode === 'calories'): ?>
+                            <p><?= count($recipes); ?> recipes found near <?= (int) $calorieTarget; ?> kcal per serving</p>
+                        <?php else: ?>
+                            <p><?= count($recipes); ?> recipes found for "<?= e($searchQuery); ?>"</p>
+                        <?php endif; ?>
                     <?php else: ?>
                         <p>Search results will show up here.</p>
                     <?php endif; ?>
@@ -290,10 +327,23 @@ try {
                                 <div class="recipe-body">
                                     <h3><?= e($recipe['title'] ?? 'Untitled Recipe'); ?></h3>
                                     <div class="recipe-stats">
-                                        <span>You have: <?= (int) ($recipe['usedIngredientCount'] ?? 0); ?></span>
-                                        <span>Still need: <?= (int) ($recipe['missedIngredientCount'] ?? 0); ?></span>
-                                        <?php if (!empty($recipe['pricePerServing'])): ?>
-                                            <span>~$<?= number_format($recipe['pricePerServing'] / 100, 2); ?>/serving</span>
+                                        <?php if ($searchMode === 'calories'): ?>
+                                            <span><?= (int) ($recipe['calories'] ?? 0); ?> kcal</span>
+                                            <?php if (!empty($recipe['protein'])): ?>
+                                                <span>Protein: <?= e($recipe['protein']); ?></span>
+                                            <?php endif; ?>
+                                            <?php if (!empty($recipe['fat'])): ?>
+                                                <span>Fat: <?= e($recipe['fat']); ?></span>
+                                            <?php endif; ?>
+                                            <?php if (!empty($recipe['carbs'])): ?>
+                                                <span>Carbs: <?= e($recipe['carbs']); ?></span>
+                                            <?php endif; ?>
+                                        <?php else: ?>
+                                            <span>You have: <?= (int) ($recipe['usedIngredientCount'] ?? 0); ?></span>
+                                            <span>Still need: <?= (int) ($recipe['missedIngredientCount'] ?? 0); ?></span>
+                                            <?php if (!empty($recipe['pricePerServing'])): ?>
+                                                <span>~$<?= number_format($recipe['pricePerServing'] / 100, 2); ?>/serving</span>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
                                     <p><strong>Have:</strong> <?= e($usedList !== '' ? $usedList : 'None listed'); ?></p>

@@ -792,3 +792,54 @@ button:hover,
     padding-top: 1rem;
     border-top: 1px solid rgba(216, 195, 170, 0.7);
 }
+
+/* ============================================= */
+/* CALORIE TARGET INPUT                          */
+/* ============================================= */
+.calorie-row {
+    display: grid;
+    gap: 0.4rem;
+}
+
+.calorie-row label {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--accent-dark);
+}
+
+.optional-label {
+    font-weight: 400;
+    color: var(--text-soft);
+    font-size: 0.88rem;
+}
+
+.calorie-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.calorie-input-wrap input[type="number"] {
+    width: 130px;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    font: inherit;
+    color: var(--text);
+    background: #fdf8f1;
+}
+
+.calorie-input-wrap input[type="number"]:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.calorie-unit {
+    color: var(--text-soft);
+    font-size: 0.92rem;
+}
+
+.calorie-row small {
+    color: var(--text-soft);
+    font-size: 0.88rem;
+}
