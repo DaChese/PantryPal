@@ -21,7 +21,6 @@ function validate_ingredient_input(?string $rawInput): array
 {
     $rawInput = trim((string) $rawInput);
 
-    // Basic empty check first so the user gets a clear message right away //
     if ($rawInput === '') {
         return [
             'valid' => false,
@@ -36,14 +35,15 @@ function validate_ingredient_input(?string $rawInput): array
         ];
     }
 
+    // Block sentences, URLs, and anything that isn't ingredient-like
     if (!preg_match('/^[a-zA-Z0-9,\-\s\']+$/', $rawInput)) {
         return [
             'valid' => false,
-            'error' => 'Use letters, numbers, spaces, commas, apostrophes, and hyphens only.',
+            'error' => 'Ingredients can only contain letters, numbers, spaces, commas, apostrophes, and hyphens. Example: chicken, rice, garlic',
         ];
     }
 
-    // Break the text into individual ingredients and remove duplicates //
+    // Break into individual ingredients and remove duplicates
     $parts = array_filter(array_map('trim', explode(',', $rawInput)));
     $parts = array_values(array_unique($parts));
 
@@ -68,14 +68,23 @@ function validate_ingredient_input(?string $rawInput): array
                 'error' => 'Each ingredient should be at least 2 characters long.',
             ];
         }
+
+        // Catch single ingredients that look like sentences (more than 4 words)
+        $wordCount = str_word_count($ingredient);
+        if ($wordCount > 4) {
+            return [
+                'valid' => false,
+                'error' => '"' . $ingredient . '" doesn\'t look like an ingredient. Enter individual items like: chicken, rice, garlic.',
+            ];
+        }
     }
 
     return [
-        'valid' => true,
-        'error' => null,
+        'valid'       => true,
+        'error'       => null,
         'ingredients' => $parts,
-        'query' => implode(', ', $parts),
-        'api_query' => implode(',', $parts),
+        'query'       => implode(', ', $parts),
+        'api_query'   => implode(',', $parts),
     ];
 }
 
